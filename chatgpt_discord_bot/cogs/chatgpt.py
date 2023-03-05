@@ -140,6 +140,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
             self.bot.logger.exception(e)  # noqa
             await self.reply(context, f":warning: **{type(e).__name__}**: {e}")
 
+        await self.update_presence()
+
+    async def update_presence(self):
         chatgpt_tokens_count = self.bot.config["chatgpt_tokens_count"]  # noqa
         await self.bot.change_presence(
             activity=discord.Activity(
