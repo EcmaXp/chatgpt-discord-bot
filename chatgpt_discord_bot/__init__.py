@@ -79,6 +79,7 @@ bot = Bot(
     help_command=None,
 )
 
+
 # Setup both of the loggers
 
 
