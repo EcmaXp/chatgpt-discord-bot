@@ -6,13 +6,11 @@ Description:
 Version: 5.5.0
 """
 
-import json
-import os
 from typing import Callable, TypeVar
 
 from discord.ext import commands
 
-from chatgpt_discord_bot.exceptions import *
+from chatgpt_discord_bot.exceptions import UserBlacklisted, UserNotOwner
 from chatgpt_discord_bot.helpers import db_manager
 
 T = TypeVar("T")
@@ -24,11 +22,7 @@ def is_owner() -> Callable[[T], T]:
     """
 
     async def predicate(context: commands.Context) -> bool:
-        with open(
-            f"{os.path.realpath(os.path.dirname(__file__))}/../../config.json"
-        ) as file:
-            data = json.load(file)
-        if context.author.id not in data["owners"]:
+        if context.author.id not in context.bot.config["owners"]:
             raise UserNotOwner
         return True
 
