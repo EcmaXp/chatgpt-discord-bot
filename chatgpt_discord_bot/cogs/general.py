@@ -15,7 +15,10 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from chatgpt_discord_bot import config
 from chatgpt_discord_bot.helpers import checks
+
+OWNER_GUILD_ID = config["owner_guild_id"]
 
 
 class General(commands.Cog, name="general"):
@@ -25,6 +28,7 @@ class General(commands.Cog, name="general"):
     @commands.hybrid_command(
         name="help", description="List all commands the bot has loaded."
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @checks.not_blacklisted()
     async def help(self, context: Context) -> None:
         prefix = self.bot.config["prefix"]
@@ -48,6 +52,7 @@ class General(commands.Cog, name="general"):
         name="botinfo",
         description="Get some useful (or not) information about the bot.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @checks.not_blacklisted()
     async def botinfo(self, context: Context) -> None:
         """
@@ -94,6 +99,7 @@ class General(commands.Cog, name="general"):
         name="invite",
         description="Get the invite link of the bot to be able to invite it.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @checks.not_blacklisted()
     async def invite(self, context: Context) -> None:
         """

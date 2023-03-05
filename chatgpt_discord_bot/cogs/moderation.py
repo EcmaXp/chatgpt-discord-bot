@@ -11,7 +11,10 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from chatgpt_discord_bot import config
 from chatgpt_discord_bot.helpers import checks, db_manager
+
+OWNER_GUILD_ID = config["owner_guild_id"]
 
 
 class Moderation(commands.Cog, name="moderation"):
@@ -22,6 +25,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="kick",
         description="Kick a user out of the server.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
     @checks.not_blacklisted()
@@ -74,6 +78,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="nick",
         description="Change the nickname of a user on a server.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(manage_nicknames=True)
     @commands.bot_has_permissions(manage_nicknames=True)
     @checks.not_blacklisted()
@@ -112,6 +117,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="ban",
         description="Bans a user from the server.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     @checks.not_blacklisted()
@@ -165,6 +171,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="warning",
         description="Manage warnings of a user on a server.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(manage_messages=True)
     @checks.not_blacklisted()
     async def warning(self, context: Context) -> None:
@@ -184,6 +191,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="add",
         description="Adds a warning to a user in the server.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @checks.not_blacklisted()
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
@@ -226,6 +234,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="remove",
         description="Removes a warning from a user in the server.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @checks.not_blacklisted()
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
@@ -256,6 +265,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="list",
         description="Shows the warnings of a user in the server.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_guild_permissions(manage_messages=True)
     @checks.not_blacklisted()
     @app_commands.describe(user="The user you want to get the warnings of.")
@@ -281,6 +291,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="purge",
         description="Delete a number of messages.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
     @checks.not_blacklisted()
@@ -306,6 +317,7 @@ class Moderation(commands.Cog, name="moderation"):
         name="hackban",
         description="Bans a user without the user having to be in the server.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
     @checks.not_blacklisted()

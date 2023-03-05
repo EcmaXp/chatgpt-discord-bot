@@ -11,8 +11,10 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from chatgpt_discord_bot import package_name
+from chatgpt_discord_bot import config, package_name
 from chatgpt_discord_bot.helpers import checks, db_manager
+
+OWNER_GUILD_ID = config["owner_guild_id"]
 
 
 class Owner(commands.Cog, name="owner"):
@@ -23,6 +25,7 @@ class Owner(commands.Cog, name="owner"):
         name="sync",
         description="Synchonizes the slash commands.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(scope="The scope of the sync. Can be `global` or `guild`")
     @checks.is_owner()
     async def sync(self, context: Context, scope: str) -> None:
@@ -59,6 +62,7 @@ class Owner(commands.Cog, name="owner"):
         name="unsync",
         description="Unsynchonizes the slash commands.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(
         scope="The scope of the sync. Can be `global`, `current_guild` or `guild`"
     )
@@ -98,6 +102,7 @@ class Owner(commands.Cog, name="owner"):
         name="load",
         description="Load a cog",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(cog="The name of the cog to load")
     @checks.is_owner()
     async def load(self, context: Context, cog: str) -> None:
@@ -124,6 +129,7 @@ class Owner(commands.Cog, name="owner"):
         name="unload",
         description="Unloads a cog.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(cog="The name of the cog to unload")
     @checks.is_owner()
     async def unload(self, context: Context, cog: str) -> None:
@@ -150,6 +156,7 @@ class Owner(commands.Cog, name="owner"):
         name="reload",
         description="Reloads a cog.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(cog="The name of the cog to reload")
     @checks.is_owner()
     async def reload(self, context: Context, cog: str) -> None:
@@ -176,6 +183,7 @@ class Owner(commands.Cog, name="owner"):
         name="shutdown",
         description="Make the bot shutdown.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @checks.is_owner()
     async def shutdown(self, context: Context) -> None:
         """
@@ -191,6 +199,7 @@ class Owner(commands.Cog, name="owner"):
         name="say",
         description="The bot will say anything you want.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(message="The message that should be repeated by the bot")
     @checks.is_owner()
     async def say(self, context: Context, *, message: str) -> None:
@@ -206,6 +215,7 @@ class Owner(commands.Cog, name="owner"):
         name="embed",
         description="The bot will say anything you want, but within embeds.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(message="The message that should be repeated by the bot")
     @checks.is_owner()
     async def embed(self, context: Context, *, message: str) -> None:
@@ -222,6 +232,7 @@ class Owner(commands.Cog, name="owner"):
         name="blacklist",
         description="Get the list of all blacklisted users.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @checks.is_owner()
     async def blacklist(self, context: Context) -> None:
         """
@@ -241,6 +252,7 @@ class Owner(commands.Cog, name="owner"):
         name="show",
         description="Shows the list of all blacklisted users.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @checks.is_owner()
     async def blacklist_show(self, context: Context) -> None:
         """
@@ -271,6 +283,7 @@ class Owner(commands.Cog, name="owner"):
         name="add",
         description="Lets you add a user from not being able to use the bot.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(user="The user that should be added to the blacklist")
     @checks.is_owner()
     async def blacklist_add(self, context: Context, user: discord.User) -> None:
@@ -303,6 +316,7 @@ class Owner(commands.Cog, name="owner"):
         name="remove",
         description="Lets you remove a user from not being able to use the bot.",
     )
+    @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(user="The user that should be removed from the blacklist.")
     @checks.is_owner()
     async def blacklist_remove(self, context: Context, user: discord.User) -> None:
