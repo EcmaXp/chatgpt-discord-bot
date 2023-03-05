@@ -40,12 +40,19 @@ class General(commands.Cog, name="general"):
             commands = cog.get_commands()
             data = []
             for command in commands:
+                app_command = getattr(command, "app_command", None)
+                guild_ids = getattr(app_command, "_guild_ids", None)
+                if guild_ids is not None:
+                    if context.guild is None or context.guild.id not in guild_ids:
+                        continue
+
                 description = command.description.partition("\n")[0]
                 data.append(f"{prefix}{command.name} - {description}")
             help_text = "\n".join(data)
-            embed.add_field(
-                name=i.capitalize(), value=f"```{help_text}```", inline=False
-            )
+            if help_text:
+                embed.add_field(
+                    name=i.capitalize(), value=f"```{help_text}```", inline=False
+                )
         await context.send(embed=embed)
 
     @commands.hybrid_command(
