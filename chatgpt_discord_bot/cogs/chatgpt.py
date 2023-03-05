@@ -17,6 +17,7 @@ from chatgpt_discord_bot.helpers import checks
 class ChatGPT(commands.Cog, name="chatgpt"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.interactions: dict[int, commands.Context] = {}
 
     @commands.hybrid_command(
         name="chatgpt",
@@ -33,6 +34,13 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
         if not text and not context.message.reference:
             text = "Hello, world!"
+
+        if (
+            getattr(context.message.type, "value", context.message.type)
+            == discord.MessageType.chat_input_command
+        ):
+            context.message.content = text
+            self.interactions[context.message.id] = context
 
         messages = await self.build_messages(context, text)
 
@@ -115,6 +123,12 @@ class ChatGPT(commands.Cog, name="chatgpt"):
             messages.append(message)
             if message.reference:
                 message = await self.fetch_reference_message(message)
+            elif message.interaction:
+                interaction = self.interactions.get(message.interaction.id)
+                if interaction is None:
+                    break
+
+                message = interaction.message  # noqa
             else:
                 break
 
