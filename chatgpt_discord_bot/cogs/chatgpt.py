@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
-from typing import Optional
+from typing import List, Optional
 
 import discord
 import openai
@@ -33,10 +33,12 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         if not text and not context.message.reference:
             text = "Hello, world!"
 
+        messages = await self.build_messages(context, text)
+
         async with context.typing():
             completion = await openai.ChatCompletion.acreate(
                 model=chatgpt_model,
-                messages=[{"role": "user", "content": text}],
+                messages=messages,
                 user=sha256(str(context.author.id).encode()).hexdigest(),
             )
             answer = completion.choices[0].message.content
@@ -44,9 +46,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        await self.process_commands_for_mention(message)
+        await self.process_commands_for_mention_or_reply(message)
 
-    async def process_commands_for_mention(self, message: discord.Message):
+    async def process_commands_for_mention_or_reply(self, message: discord.Message):
         # This is a modified version of commands.Bot.process_commands
         if message.author.bot:
             return
@@ -54,10 +56,10 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         if not self.bot.config["chatgpt_allow_mention"]:  # noqa
             return
 
-        ctx = await self.get_context_for_mention(message, self.chatgpt.name)
+        ctx = await self.get_context_for_mention_or_reply(message, self.chatgpt.name)
         await self.bot.invoke(ctx)
 
-    async def get_context_for_mention(
+    async def get_context_for_mention_or_reply(
         self,
         message: discord.Message,
         target_command: str,
@@ -70,6 +72,8 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         prefix = tuple(prefix.rstrip() for prefix in prefix)  # strip whitespace
         if message.content.startswith(prefix):
             invoked_prefix = discord.utils.find(view.skip_string, prefix)
+        elif message.type == discord.MessageType.reply:
+            invoked_prefix = ""
         else:
             return ctx
 
@@ -78,6 +82,51 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         ctx.prefix = invoked_prefix
         ctx.command = self.bot.get_command(invoker)
         return ctx
+
+    async def build_messages(self, context: commands.Context, text: str) -> list[dict]:
+        bot_member = context.guild.get_member(context.bot.user.id)
+        bot_mention = f"@{bot_member.display_name}"
+
+        messages = []
+        for history in await self.fetch_all_history(context.message, 64):
+            history_text = history.clean_content
+            if history == context.message:  # last message
+                history_text = text
+            elif history_text.startswith(bot_mention):
+                history_text = history_text[len(bot_mention) :]
+
+            messages.append(
+                {
+                    "role": "assistant" if history.author == self.bot.user else "user",
+                    "content": history_text.strip(),
+                }
+            )
+
+        return messages
+
+    async def fetch_all_history(
+        self,
+        message: discord.Message,
+        limit: int,
+    ) -> List[discord.Message]:
+        messages = []
+        for i in range(limit):
+            messages.append(message)
+            if message.reference:
+                message = await self.fetch_reference_message(message)
+            else:
+                break
+
+        return messages[::-1]
+
+    async def fetch_reference_message(
+        self, message: discord.Message
+    ) -> Optional[discord.Message]:
+        reference = message.reference
+        if reference.cached_message:
+            return reference.cached_message
+        else:
+            return await message.channel.fetch_message(reference.message_id)
 
 
 async def setup(bot):
