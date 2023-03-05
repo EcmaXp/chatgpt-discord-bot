@@ -5,6 +5,7 @@ Description:
 
 Version: 5.5.0
 """
+from typing import Optional
 
 import discord
 from discord import app_commands
@@ -159,13 +160,16 @@ class Owner(commands.Cog, name="owner"):
     @app_commands.guilds(OWNER_GUILD_ID)
     @app_commands.describe(cog="The name of the cog to reload")
     @commands.check(checks.is_owner)
-    async def reload(self, context: Context, cog: str) -> None:
+    async def reload(self, context: Context, cog: Optional[str] = None) -> None:
         """
         The bot will reload the given cog.
 
         :param context: The hybrid command context.
         :param cog: The name of the cog to reload.
         """
+        if cog is None:
+            cog = "chatgpt"
+
         try:
             await self.bot.reload_extension(f"{package_name}.cogs.{cog}")
         except Exception:
