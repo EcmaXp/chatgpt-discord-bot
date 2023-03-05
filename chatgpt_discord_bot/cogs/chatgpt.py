@@ -219,9 +219,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
             answer = "\n".join(lines)
             answer_fp = io.BytesIO(answer.encode("utf-8"))
             answer_file = discord.File(answer_fp, "message.txt")
-            reply = await context.message.reply(file=answer_file)
+            reply = await context.reply(file=answer_file)
         else:
-            reply = await context.message.reply(answer)
+            reply = await context.reply(answer)
 
         self.reply_ids[context.message.id].add(reply.id)
         return reply
