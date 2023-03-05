@@ -6,6 +6,7 @@ from typing import List, Optional
 import discord
 import openai
 import tiktoken
+from async_lru import alru_cache
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands.view import StringView
@@ -119,6 +120,7 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
         return messages[::-1]
 
+    @alru_cache(maxsize=256, typed=True, ttl=3600)
     async def fetch_reference_message(
         self, message: discord.Message
     ) -> Optional[discord.Message]:

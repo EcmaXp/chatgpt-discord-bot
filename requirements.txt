@@ -4,3 +4,4 @@ discord.py
 openai
 tiktoken
 keyring
+async-lru
