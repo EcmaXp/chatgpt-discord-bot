@@ -12,8 +12,9 @@ import aiosqlite
 from pathlib import Path
 
 package_dir = Path(__file__).parents[1]
+repo_dir = package_dir.parent
 
-DATABASE_PATH = package_dir / "database.db"
+DATABASE_PATH = repo_dir / "database.db"
 
 
 async def get_blacklisted_users() -> list:

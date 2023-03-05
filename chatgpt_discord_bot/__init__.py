@@ -145,7 +145,7 @@ bot.logger = logger
 
 
 async def init_db():
-    async with aiosqlite.connect(str(package_dir / "database/database.db")) as db:
+    async with aiosqlite.connect(str(repo_dir / "database.db")) as db:
         with open(str(package_dir / "database/schema.sql")) as file:
             await db.executescript(file.read())
         await db.commit()
