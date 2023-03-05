@@ -1,17 +1,107 @@
 from __future__ import annotations
 
+from copy import deepcopy
+from datetime import datetime
 from hashlib import sha256
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import discord
 import openai
-import tiktoken
 from async_lru import alru_cache
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands.view import StringView
 
+from chatgpt_discord_bot import config
 from chatgpt_discord_bot.helpers import checks
+from chatgpt_discord_bot.helpers.openai import get_tokens
+from chatgpt_discord_bot.helpers.utils import removeprefix
+
+
+class Chat:
+    def __init__(self, history: list[dict] = None, context: commands.Context = None):
+        self.history = history or []
+        self.context = context
+        self.last_completion = None
+        self.config = context.bot.config if context else config
+        self.user = (
+            sha256(str(context.author.id).encode()).hexdigest() if context else None
+        )
+
+        for item in self.history:
+            if item.get("tokens") is None:
+                item["tokens"] = get_tokens(self.get_model(), item["content"])
+
+    def __bool__(self):
+        return bool(self.history)
+
+    def __len__(self):
+        return len(self.history)
+
+    def __getitem__(self, index):
+        return self.history[index]
+
+    def __iter__(self):
+        return iter(self.history)
+
+    async def completion(self, *, max_tokens: int = 4096):
+        max_tokens = min(max(self.get_max_tokens(), 0), max_tokens)
+        if not max_tokens:
+            raise ValueError("All tokens are used up, start a new chat please.")
+
+        completion = await openai.ChatCompletion.acreate(
+            model="gpt-3.5-turbo",
+            messages=self.get_messages(),
+            max_tokens=max_tokens,
+            user=self.user or "",
+        )
+        return completion
+
+    async def ask(self, text: str, *, max_tokens: int = 4096):
+        self.add_message("user", text)
+        completion = await self.completion(max_tokens=max_tokens)
+        response = completion.choices[0].message.content.strip()
+        self.last_completion = completion
+        self.add_message("assistant", response)
+        return response
+
+    def add_message(self, role: str, content: str):
+        self.history.append(
+            {
+                "role": role,
+                "content": content,
+                "tokens": get_tokens(self.get_model(), content),
+            }
+        )
+
+    def get_model(self) -> str:
+        return self.config["openai_chatgpt_model"]
+
+    def get_messages(self) -> list[dict]:
+        return [
+            {"role": item["role"], "content": item["content"]} for item in self.history
+        ]
+
+    def get_max_tokens(self) -> int:
+        return 4096 - self.get_tokens() - 1
+
+    def get_tokens(self) -> int:
+        return 2 + sum(item["tokens"] + 5 for item in self.history)
+
+    def copy(self):
+        return Chat(deepcopy(self.history), self.context)
+
+    def print(self, message: discord.Message | None = None):
+        print()
+        if getattr(message, "jump_url", None):
+            print("#", message.jump_url)
+        print(f"{message.author} @ {datetime.now().replace(microsecond=0)}:")
+        for no, item in enumerate(self.history):
+            print(f"{item['role']}: {item['content']}")
+
+        if self.last_completion is not None:
+            for key, value in self.last_completion.usage.items():
+                print(f"{key}: {value}")
 
 
 class ChatGPT(commands.Cog, name="chatgpt"):
@@ -29,24 +119,16 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         text="The message to send to the model",
     )
     async def chatgpt(self, context: commands.Context, *, text: Optional[str] = None):
-        chatgpt_model = self.bot.config["openai_chatgpt_model"]  # noqa
-        chatgpt_model_encoding = tiktoken.encoding_for_model(chatgpt_model)
-
         if not text and not context.message.reference:
             text = "Hello, world!"
 
         self.assign_interaction(context, text)
 
-        messages = await self.build_messages(context, text)
-
+        chat = await self.build_chat(context)
         async with context.typing():
-            completion = await openai.ChatCompletion.acreate(
-                model=chatgpt_model,
-                messages=messages,
-                user=sha256(str(context.author.id).encode()).hexdigest(),
-            )
-            answer = completion.choices[0].message.content
-            await context.reply(answer)
+            answer = await chat.ask(text)
+            reply = await context.reply(answer)
+            chat.print(context.message)
 
     def assign_interaction(self, context: commands.Context, text: str):
         if (
@@ -95,26 +177,21 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         ctx.command = self.bot.get_command(invoker)
         return ctx
 
-    async def build_messages(self, context: commands.Context, text: str) -> list[dict]:
+    async def build_chat(self, context: commands.Context) -> Chat:
         bot_member = context.guild.get_member(context.bot.user.id)
         bot_mention = f"@{bot_member.display_name}"
 
         messages = []
         for history in await self.fetch_all_history(context.message, 64):
-            history_text = history.clean_content
-            if history == context.message:  # last message
-                history_text = text
-            elif history_text.startswith(bot_mention):
-                history_text = history_text[len(bot_mention) :]
-
+            text = cast(str, history.clean_content)
             messages.append(
                 {
                     "role": "assistant" if history.author == self.bot.user else "user",
-                    "content": history_text.strip(),
+                    "content": removeprefix(text, bot_mention).strip(),
                 }
             )
 
-        return messages
+        return Chat(messages, context)
 
     async def fetch_all_history(
         self,
@@ -123,15 +200,16 @@ class ChatGPT(commands.Cog, name="chatgpt"):
     ) -> List[discord.Message]:
         messages = []
         for i in range(limit):
-            messages.append(message)
             if message.reference:
                 message = await self.fetch_reference_message(message)
+                messages.append(message)
             elif message.interaction:
                 interaction = self.interactions.get(message.interaction.id)
                 if interaction is None:
                     break
 
                 message = interaction.message  # noqa
+                messages.append(message)
             else:
                 break
 
