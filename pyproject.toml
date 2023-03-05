@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "chatgpt-discord-bot"
+version = "0.1.0"
+description = "A Discord bot that helps users generate random conversation topics using the GPT-3 language model"
+authors = ["EcmaXp <ecmaxp@ecmaxp.kr>"]
+license = "Apache License 2.0"
+readme = "README.md"
+packages = [{include = "chatgpt_discord_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiohttp = "^3.8.4"
+aiosqlite = "^0.18.0"
+"discord.py" = "^2.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
