@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
 from hashlib import sha256
@@ -109,6 +110,7 @@ class Chat:
 class ChatGPT(commands.Cog, name="chatgpt"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.reply_ids: dict[int, set] = defaultdict(set)
         self.interactions: dict[int, commands.Context] = {}
         self.bot.config.setdefault("chatgpt_tokens_count", 0)  # noqa
 
@@ -133,6 +135,8 @@ class ChatGPT(commands.Cog, name="chatgpt"):
             reply = await context.reply(answer)
             chat.print(context.message)
 
+        self.reply_ids[context.message.id].add(reply.id)
+
         chatgpt_tokens_count = self.bot.config["chatgpt_tokens_count"]  # noqa
         await self.bot.change_presence(
             activity=discord.Activity(
@@ -155,6 +159,36 @@ class ChatGPT(commands.Cog, name="chatgpt"):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         await self.process_commands_for_mention_or_reply(message)
+
+    @commands.Cog.listener()
+    async def on_message_edit(
+        self,
+        before_message: discord.Message,
+        message: discord.Message,
+    ):
+        if message.id in self.reply_ids:
+            reply_ids = self.reply_ids.pop(message.id, None)
+            if reply_ids:
+                await message.channel.delete_messages(
+                    [
+                        message.channel.get_partial_message(reply_id)
+                        for reply_id in reply_ids
+                    ]
+                )
+
+        await self.on_message(message)
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: discord.Message):
+        if message.id in self.reply_ids:
+            reply_ids = self.reply_ids.pop(message.id, None)
+            if reply_ids:
+                await message.channel.delete_messages(
+                    [
+                        message.channel.get_partial_message(reply_id)
+                        for reply_id in reply_ids
+                    ]
+                )
 
     async def process_commands_for_mention_or_reply(self, message: discord.Message):
         # This is a modified version of commands.Bot.process_commands
