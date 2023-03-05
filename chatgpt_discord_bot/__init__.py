@@ -24,6 +24,7 @@ from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
 import chatgpt_discord_bot.exceptions
+from chatgpt_discord_bot.helpers import keyring
 
 package_dir = Path(__file__).parent
 package_name = package_dir.name
@@ -42,6 +43,7 @@ if not config_file.is_file():
 else:
     with config_file.open(encoding="utf-8") as file:
         config = json.load(file)
+        config.update(keyring.get_secrets(config))
 
 """	
 Setup bot intents (events restrictions)
