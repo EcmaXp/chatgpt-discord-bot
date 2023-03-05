@@ -46,6 +46,10 @@ class General(commands.Cog, name="general"):
                     if context.guild is None or context.guild.id not in guild_ids:
                         continue
 
+                if checks.is_owner in command.checks:
+                    if context.author.id not in self.bot.config["owners"]:
+                        continue
+
                 description = command.description.partition("\n")[0]
                 data.append(f"{prefix}{command.name} - {description}")
             help_text = "\n".join(data)
