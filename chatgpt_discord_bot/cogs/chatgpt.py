@@ -4,7 +4,7 @@ from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
 from hashlib import sha256
-from typing import List, Optional, cast
+from typing import List, Optional, cast, io
 
 import discord
 import openai
@@ -133,10 +133,8 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         chat = await self.build_chat(context)
         async with context.typing():
             answer = await chat.ask()
-            reply = await context.reply(answer)
+            await self.reply(context, answer)
             chat.print(context.message)
-
-        self.reply_ids[context.message.id].add(reply.id)
 
         chatgpt_tokens_count = self.bot.config["chatgpt_tokens_count"]  # noqa
         await self.bot.change_presence(
@@ -148,6 +146,24 @@ class ChatGPT(commands.Cog, name="chatgpt"):
                 ),
             )
         )
+
+    async def reply(self, context: commands.Context, answer: str) -> discord.Message:
+        if len(answer) >= 2000:
+            lines = []
+            for line in answer.splitlines():
+                while line:
+                    lines.append(line[:80])
+                    line = line[80:]
+
+            answer = "\n".join(lines)
+            answer_fp = io.BytesIO(answer.encode("utf-8"))
+            answer_file = discord.File(answer_fp, "message.txt")
+            reply = await context.message.reply(file=answer_file)
+        else:
+            reply = await context.message.reply(answer)
+
+        self.reply_ids[context.message.id].add(reply.id)
+        return reply
 
     def assign_interaction(self, context: commands.Context, text: str):
         if (
