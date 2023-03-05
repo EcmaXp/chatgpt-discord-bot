@@ -101,6 +101,7 @@ class General(commands.Cog, name="general"):
     )
     @app_commands.guilds(OWNER_GUILD_ID)
     @checks.not_blacklisted()
+    @checks.is_owner()
     async def invite(self, context: Context) -> None:
         """
         Get the invite link of the bot to be able to invite it.
