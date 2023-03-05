@@ -16,3 +16,6 @@ aiosqlite = "^0.18.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+bot = "chatgpt_discord_bot:main"
