@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import io
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
 from hashlib import sha256
-from typing import List, Optional, cast, io
+from typing import List, Optional, cast
 
 import discord
 import openai
