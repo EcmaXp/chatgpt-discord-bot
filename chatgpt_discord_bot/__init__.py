@@ -88,7 +88,7 @@ If you want to use prefix commands, make sure to also enable the intent below in
 intents.message_content = True
 
 bot = Bot(
-    command_prefix=commands.when_mentioned_or(config["prefix"]),
+    command_prefix=config["prefix"],
     intents=intents,
     help_command=None,
 )
