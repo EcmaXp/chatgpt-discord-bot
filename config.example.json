@@ -5,6 +5,7 @@
   "application_id": "YOUR_APPLICATION_ID_HERE",
   "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
   "openai_chatgpt_model": "gpt-3.5-turbo",
+  "chatgpt_allow_mention": true,
   "sync_commands_globally": false,
   "owner_guild_id": 123456789,
   "owners": [
