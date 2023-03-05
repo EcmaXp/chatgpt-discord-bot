@@ -26,7 +26,7 @@ from chatgpt_discord_bot.helpers.openai import get_tokens
 from chatgpt_discord_bot.helpers.utils import removeprefix
 
 __author__ = "EcmaXp <ecmaxp@ecmaxp.kr>"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 class Chat:
@@ -304,7 +304,10 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         prefix = tuple(prefix.rstrip() for prefix in prefix)  # strip whitespace
         if message.content.startswith(prefix):
             invoked_prefix = discord.utils.find(view.skip_string, prefix)
-        elif message.type == discord.MessageType.reply:
+        elif (
+            message.type == discord.MessageType.reply
+            and self.bot.user in message.mentions
+        ):
             invoked_prefix = ""
         else:
             return ctx
