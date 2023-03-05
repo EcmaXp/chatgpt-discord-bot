@@ -58,8 +58,9 @@ class Chat:
         )
         return completion
 
-    async def ask(self, text: str, *, max_tokens: int = 4096):
-        self.add_message("user", text)
+    async def ask(self, text: Optional[str] = None, *, max_tokens: int = 4096):
+        if text is not None:
+            self.add_message("user", text)
         completion = await self.completion(max_tokens=max_tokens)
         response = completion.choices[0].message.content.strip()
         if self.config:
@@ -131,7 +132,7 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
         chat = await self.build_chat(context)
         async with context.typing():
-            answer = await chat.ask(text)
+            answer = await chat.ask()
             reply = await context.reply(answer)
             chat.print(context.message)
 
@@ -226,38 +227,45 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         return ctx
 
     async def build_chat(self, context: commands.Context) -> Chat:
+        model = self.bot.config["openai_chatgpt_model"]  # noqa
+
         bot_member = context.guild.get_member(context.bot.user.id)
         bot_mention = f"@{bot_member.display_name}"
 
         messages = []
-        for history in await self.fetch_all_history(context.message, 64):
-            text = cast(str, history.clean_content)
+        for message in await self.fetch_all_messages(context.message, 64):
+            text = cast(str, message.clean_content)
+
+            if message.attachments:
+                text += "\n\n" + (await self.fetch_attachment(message))
+                if get_tokens(model, text) > 1024 * 3:
+                    raise ValueError("Attachment too large")
+
             messages.append(
                 {
-                    "role": "assistant" if history.author == self.bot.user else "user",
+                    "role": "assistant" if message.author == self.bot.user else "user",
                     "content": removeprefix(text, bot_mention).strip(),
                 }
             )
 
         return Chat(messages, context)
 
-    async def fetch_all_history(
+    async def fetch_all_messages(
         self,
         message: discord.Message,
         limit: int,
     ) -> List[discord.Message]:
         messages = []
         for i in range(limit):
+            messages.append(message)
             if message.reference:
                 message = await self.fetch_reference_message(message)
-                messages.append(message)
             elif message.interaction:
                 interaction = self.interactions.get(message.interaction.id)
                 if interaction is None:
                     break
 
                 message = interaction.message  # noqa
-                messages.append(message)
             else:
                 break
 
@@ -272,6 +280,23 @@ class ChatGPT(commands.Cog, name="chatgpt"):
             return reference.cached_message
         else:
             return await message.channel.fetch_message(reference.message_id)
+
+    @alru_cache(maxsize=64, typed=True, ttl=3600)
+    async def fetch_attachment(self, message: discord.Message) -> str:
+        if len(message.attachments) > 1:
+            raise ValueError("Too many attachments")
+
+        for attachment in message.attachments:
+            if attachment.size > 1024 * 64:
+                raise ValueError("Attachment too large")
+            elif not attachment.filename.endswith((".txt", ".py")):
+                raise ValueError("Attachment is not text")
+
+            content = await attachment.read()
+            try:
+                return content.decode("utf-8")
+            except UnicodeDecodeError:
+                raise ValueError("Attachment is not text (utf-8)")
 
 
 async def setup(bot):
