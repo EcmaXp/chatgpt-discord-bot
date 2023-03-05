@@ -35,12 +35,7 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         if not text and not context.message.reference:
             text = "Hello, world!"
 
-        if (
-            getattr(context.message.type, "value", context.message.type)
-            == discord.MessageType.chat_input_command
-        ):
-            context.message.content = text
-            self.interactions[context.message.id] = context
+        self.assign_interaction(context, text)
 
         messages = await self.build_messages(context, text)
 
@@ -52,6 +47,14 @@ class ChatGPT(commands.Cog, name="chatgpt"):
             )
             answer = completion.choices[0].message.content
             await context.reply(answer)
+
+    def assign_interaction(self, context: commands.Context, text: str):
+        if (
+            getattr(context.message.type, "value", context.message.type)
+            == discord.MessageType.chat_input_command
+        ):
+            context.message.content = text
+            self.interactions[context.message.id] = context
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
