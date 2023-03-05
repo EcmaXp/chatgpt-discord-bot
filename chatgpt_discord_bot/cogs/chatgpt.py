@@ -118,9 +118,9 @@ class Chat:
                 print(f"{key}: {value}")
 
     async def compress_large_messages(
-            self,
-            threshold_tokens: int = 100,
-            max_prompt_tokens: int = (4096 - 1024),
+        self,
+        threshold_tokens: int = 100,
+        max_prompt_tokens: int = (4096 - 1024),
     ):
         if self.get_tokens() < max_prompt_tokens:
             return
@@ -166,7 +166,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
     @app_commands.describe(
         question="The message to send to the model",
     )
-    async def chatgpt(self, context: commands.Context, *, question: Optional[str] = None):
+    async def chatgpt(
+        self, context: commands.Context, *, question: Optional[str] = None
+    ):
         if not question and not context.message.reference:
             question = "Hello, world!"
 
@@ -174,7 +176,7 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
         try:
             chat = await self.build_chat(context, question)
-            if chat[-1]['role'] == 'system':
+            if chat[-1]["role"] == "system":
                 await self.reply(context, "[SYSTEM] System message is set.")
                 return
 
@@ -238,8 +240,8 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
     def assign_interaction(self, context: commands.Context, question: str):
         if (
-                getattr(context.message.type, "value", context.message.type)
-                == discord.MessageType.chat_input_command
+            getattr(context.message.type, "value", context.message.type)
+            == discord.MessageType.chat_input_command
         ):
             context.message.content = question
             self.interactions[context.message.id] = context
@@ -250,9 +252,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
     @commands.Cog.listener()
     async def on_message_edit(
-            self,
-            before_message: discord.Message,
-            message: discord.Message,
+        self,
+        before_message: discord.Message,
+        message: discord.Message,
     ):
         if message.id in self.reply_ids:
             reply_ids = self.reply_ids.pop(message.id, None)
@@ -290,9 +292,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         await self.bot.invoke(ctx)
 
     async def get_context_for_mention_or_reply(
-            self,
-            message: discord.Message,
-            target_command: str,
+        self,
+        message: discord.Message,
+        target_command: str,
     ) -> Optional[commands.Context]:
         # This is a modified version of commands.Context.from_message
         view = StringView(message.content)
@@ -332,7 +334,7 @@ class ChatGPT(commands.Cog, name="chatgpt"):
             if text.lower().startswith("[system]"):
                 if role == "user":
                     role = "system"
-                    text = text[len("[system]"):].strip()
+                    text = text[len("[system]") :].strip()
                 elif role == "assistant":
                     continue
                 else:
@@ -351,9 +353,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         return Chat(messages, context)
 
     async def fetch_all_messages(
-            self,
-            message: discord.Message,
-            limit: int,
+        self,
+        message: discord.Message,
+        limit: int,
     ) -> List[discord.Message]:
         messages = []
         for i in range(limit):
@@ -373,7 +375,7 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
     @alru_cache(maxsize=256, typed=True, ttl=3600)
     async def fetch_reference_message(
-            self, message: discord.Message
+        self, message: discord.Message
     ) -> Optional[discord.Message]:
         reference = message.reference
         if reference.cached_message:
