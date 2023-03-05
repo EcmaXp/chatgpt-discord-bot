@@ -1,3 +1,9 @@
+""""
+ChatGPT Discord Bot
+Apache License 2.0
+Copyright (c) 2023 EcmaXp
+"""
+
 from __future__ import annotations
 
 import io
@@ -18,6 +24,9 @@ from chatgpt_discord_bot import config
 from chatgpt_discord_bot.helpers import checks
 from chatgpt_discord_bot.helpers.openai import get_tokens
 from chatgpt_discord_bot.helpers.utils import removeprefix
+
+__author__ = "EcmaXp <ecmaxp@ecmaxp.kr>"
+__version__ = "0.1.0"
 
 
 class Chat:
