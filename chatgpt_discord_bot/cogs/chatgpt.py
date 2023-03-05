@@ -48,6 +48,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         if message.author.bot:
             return
 
+        if not self.bot.config["chatgpt_allow_mention"]:  # noqa
+            return
+
         ctx = await self.get_context_for_mention(message, self.chatgpt.name)
         await self.bot.invoke(ctx)
 
