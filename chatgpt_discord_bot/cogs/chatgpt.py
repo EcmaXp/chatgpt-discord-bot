@@ -154,16 +154,16 @@ class ChatGPT(commands.Cog, name="chatgpt"):
     )
     @commands.check(checks.not_blacklisted)
     @app_commands.describe(
-        text="The message to send to the model",
+        question="The message to send to the model",
     )
-    async def chatgpt(self, context: commands.Context, *, text: Optional[str] = None):
-        if not text and not context.message.reference:
-            text = "Hello, world!"
+    async def chatgpt(self, context: commands.Context, *, question: Optional[str] = None):
+        if not question and not context.message.reference:
+            question = "Hello, world!"
 
-        self.assign_interaction(context, text)
+        self.assign_interaction(context, question)
 
         try:
-            chat = await self.build_chat(context)
+            chat = await self.build_chat(context, question)
             if chat[-1]['role'] == 'system':
                 await self.reply(context, "[SYSTEM] System message is set.")
                 return
@@ -226,12 +226,12 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         self.reply_ids[context.message.id].add(reply.id)
         return reply
 
-    def assign_interaction(self, context: commands.Context, text: str):
+    def assign_interaction(self, context: commands.Context, question: str):
         if (
                 getattr(context.message.type, "value", context.message.type)
                 == discord.MessageType.chat_input_command
         ):
-            context.message.content = text
+            context.message.content = question
             self.interactions[context.message.id] = context
 
     @commands.Cog.listener()
@@ -303,7 +303,7 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         ctx.command = self.bot.get_command(invoker)
         return ctx
 
-    async def build_chat(self, context: commands.Context) -> Chat:
+    async def build_chat(self, context: commands.Context, question: str) -> Chat:
         model = self.bot.config["openai_chatgpt_model"]  # noqa
 
         bot_member = context.guild.get_member(context.bot.user.id)
@@ -312,7 +312,11 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         messages = []
         for message in await self.fetch_all_messages(context.message, 64):
             role = "assistant" if message.author == self.bot.user else "user"
-            text = cast(str, message.clean_content)
+            if message == context.message:
+                text = question
+            else:
+                text = cast(str, message.clean_content)
+
             text = removeprefix(text, bot_mention).strip()
 
             if text.lower().startswith("[system]"):
