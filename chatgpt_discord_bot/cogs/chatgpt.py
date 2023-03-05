@@ -132,6 +132,10 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
         try:
             chat = await self.build_chat(context)
+            if chat[-1]['role'] == 'system':
+                await self.reply(context, "[SYSTEM] System message is set.")
+                return
+
             async with context.typing():
                 answer = await chat.ask()
                 await self.reply(context, answer)
@@ -257,19 +261,28 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
         messages = []
         for message in await self.fetch_all_messages(context.message, 64):
+            role = "assistant" if message.author == self.bot.user else "user"
             text = cast(str, message.clean_content)
+            text = removeprefix(text, bot_mention).strip()
+
+            if text.lower().startswith("[system]"):
+                if role == "user":
+                    role = "system"
+                    text = text[len("[system]") :].strip()
+                elif role == "assistant":
+                    continue
+                else:
+                    raise ValueError("Unknown role")
 
             if message.attachments:
                 text += "\n\n" + (await self.fetch_attachment(message))
                 if get_tokens(model, text) > 1024 * 3:
                     raise ValueError("Attachment too large")
 
-            messages.append(
-                {
-                    "role": "assistant" if message.author == self.bot.user else "user",
-                    "content": removeprefix(text, bot_mention).strip(),
-                }
-            )
+            if role == "system":
+                messages.insert(0, {"role": role, "content": text})
+            else:
+                messages.append({"role": role, "content": text})
 
         return Chat(messages, context)
 
