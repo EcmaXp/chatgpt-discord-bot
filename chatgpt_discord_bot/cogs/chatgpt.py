@@ -130,11 +130,15 @@ class ChatGPT(commands.Cog, name="chatgpt"):
 
         self.assign_interaction(context, text)
 
-        chat = await self.build_chat(context)
-        async with context.typing():
-            answer = await chat.ask()
-            await self.reply(context, answer)
-            chat.print(context.message)
+        try:
+            chat = await self.build_chat(context)
+            async with context.typing():
+                answer = await chat.ask()
+                await self.reply(context, answer)
+                chat.print(context.message)
+        except Exception as e:
+            self.bot.logger.exception(e)  # noqa
+            await self.reply(context, f":warning: **{type(e).__name__}**: {e}")
 
         chatgpt_tokens_count = self.bot.config["chatgpt_tokens_count"]  # noqa
         await self.bot.change_presence(
