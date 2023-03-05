@@ -12,8 +12,8 @@ from typing import Callable, TypeVar
 
 from discord.ext import commands
 
-from exceptions import *
-from helpers import db_manager
+from chatgpt_discord_bot.exceptions import *
+from chatgpt_discord_bot.helpers import db_manager
 
 T = TypeVar("T")
 
@@ -25,7 +25,7 @@ def is_owner() -> Callable[[T], T]:
 
     async def predicate(context: commands.Context) -> bool:
         with open(
-            f"{os.path.realpath(os.path.dirname(__file__))}/../config.json"
+            f"{os.path.realpath(os.path.dirname(__file__))}/../../config.json"
         ) as file:
             data = json.load(file)
         if context.author.id not in data["owners"]:

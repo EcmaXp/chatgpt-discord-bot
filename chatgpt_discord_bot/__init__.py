@@ -19,12 +19,15 @@ import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
-import exceptions
+import chatgpt_discord_bot.exceptions
 
-if not os.path.isfile(f"{os.path.realpath(os.path.dirname(__file__))}/config.json"):
+config_file = (
+    f"{os.path.realpath(os.path.dirname(os.path.dirname(__file__)))}/config.json"
+)
+if not os.path.isfile(config_file):
     sys.exit("'config.json' not found! Please add it and try again.")
 else:
-    with open(f"{os.path.realpath(os.path.dirname(__file__))}/config.json") as file:
+    with open(config_file) as file:
         config = json.load(file)
 
 """	
@@ -110,7 +113,7 @@ class LoggingFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-logger = logging.getLogger("discord_bot")
+logger = logging.getLogger("chatgpt_discord_bot")
 logger.setLevel(logging.INFO)
 
 # Console handler
@@ -293,7 +296,7 @@ async def load_cogs() -> None:
         if file.endswith(".py"):
             extension = file[:-3]
             try:
-                await bot.load_extension(f"cogs.{extension}")
+                await bot.load_extension(f"chatgpt_discord_bot.cogs.{extension}")
                 bot.logger.info(f"Loaded extension '{extension}'")
             except Exception as e:
                 exception = f"{type(e).__name__}: {e}"

@@ -13,7 +13,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from helpers import checks
+from chatgpt_discord_bot.helpers import checks
 
 
 class Choice(discord.ui.View):

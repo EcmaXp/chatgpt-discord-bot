@@ -9,7 +9,7 @@ Version: 5.5.0
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from helpers import checks
+from chatgpt_discord_bot.helpers import checks
 
 
 # Here we name the cog and create a new class for the cog.

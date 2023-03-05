@@ -11,7 +11,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
-from helpers import checks, db_manager
+from chatgpt_discord_bot.helpers import checks, db_manager
 
 
 class Moderation(commands.Cog, name="moderation"):
