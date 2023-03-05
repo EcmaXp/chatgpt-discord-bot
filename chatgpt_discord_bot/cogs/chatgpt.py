@@ -61,6 +61,8 @@ class Chat:
         self.add_message("user", text)
         completion = await self.completion(max_tokens=max_tokens)
         response = completion.choices[0].message.content.strip()
+        if self.config:
+            self.config["chatgpt_tokens_count"] += completion.usage.total_tokens
         self.last_completion = completion
         self.add_message("assistant", response)
         return response
@@ -108,6 +110,7 @@ class ChatGPT(commands.Cog, name="chatgpt"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.interactions: dict[int, commands.Context] = {}
+        self.bot.config.setdefault("chatgpt_tokens_count", 0)  # noqa
 
     @commands.hybrid_command(
         name="chatgpt",
@@ -129,6 +132,17 @@ class ChatGPT(commands.Cog, name="chatgpt"):
             answer = await chat.ask(text)
             reply = await context.reply(answer)
             chat.print(context.message)
+
+        chatgpt_tokens_count = self.bot.config["chatgpt_tokens_count"]  # noqa
+        await self.bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.playing,
+                name=(
+                    f"{chatgpt_tokens_count:,} tokens"
+                    f" = {chatgpt_tokens_count / 1000 * 0.002:,.2f} $"
+                ),
+            )
+        )
 
     def assign_interaction(self, context: commands.Context, text: str):
         if (
