@@ -18,6 +18,7 @@ from pathlib import Path
 
 import aiosqlite
 import discord
+import openai
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
@@ -142,6 +143,20 @@ file_handler.setFormatter(file_handler_formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 bot.logger = logger
+
+
+def init_openai():
+    # Initialize OpenAI
+    openai.api_key = config["openai_api_key"]
+    try:
+        openai.Model.list()
+    except openai.error.AuthenticationError as e:
+        bot.logger.error(
+            f"OpenAI API key is invalid, please check your config file and try again.\n{e}"
+        )
+        sys.exit(
+            f"OpenAI API key is invalid, please check your config file and try again: {e}"
+        )
 
 
 async def init_db():
@@ -312,6 +327,7 @@ async def load_cogs() -> None:
 
 
 def main():
+    init_openai()
     asyncio.run(init_db())
     asyncio.run(load_cogs())
     bot.run(config["token"])
