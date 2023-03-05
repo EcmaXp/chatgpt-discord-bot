@@ -30,6 +30,9 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         chatgpt_model = self.bot.config["openai_chatgpt_model"]  # noqa
         chatgpt_model_encoding = tiktoken.encoding_for_model(chatgpt_model)
 
+        if not text and not context.message.reference:
+            text = "Hello, world!"
+
         async with context.typing():
             completion = await openai.ChatCompletion.acreate(
                 model=chatgpt_model,
@@ -64,7 +67,8 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         ctx = commands.Context(prefix=None, view=view, bot=self.bot, message=message)
 
         prefix = commands.when_mentioned(self.bot, message)
-        if message.content.startswith(tuple(prefix)):
+        prefix = tuple(prefix.rstrip() for prefix in prefix)  # strip whitespace
+        if message.content.startswith(prefix):
             invoked_prefix = discord.utils.find(view.skip_string, prefix)
         else:
             return ctx
