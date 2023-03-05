@@ -19,6 +19,7 @@ from pathlib import Path
 import aiosqlite
 import discord
 import openai
+import tiktoken
 from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
@@ -157,6 +158,9 @@ def init_openai():
         sys.exit(
             f"OpenAI API key is invalid, please check your config file and try again: {e}"
         )
+
+    # Initialize the encoding for model
+    tiktoken.encoding_for_model(config.get("openai_chatgpt_model", "gpt-3.5-turbo"))
 
 
 async def init_db():

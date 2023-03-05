@@ -4,6 +4,7 @@
   "permissions": "YOUR_BOT_PERMISSIONS_HERE",
   "application_id": "YOUR_APPLICATION_ID_HERE",
   "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
+  "openai_chatgpt_model": "gpt-3.5-turbo",
   "sync_commands_globally": false,
   "owners": [
     123456789,
