@@ -23,9 +23,8 @@ def get_password(url_or_token: str) -> str:
     return keyring.get_password(service_name, user_name)
 
 
-def get_secrets(config: dict[str, str]) -> dict[str, str]:
-    return {
-        key: get_password(value)
-        for key, value in config.items()
-        if is_keyring_url(value)
-    }
+def try_get_password(url_or_token: str) -> str:
+    if is_keyring_url(url_or_token):
+        return get_password(url_or_token)
+    else:
+        return url_or_token

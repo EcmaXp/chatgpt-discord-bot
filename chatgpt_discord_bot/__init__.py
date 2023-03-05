@@ -43,7 +43,6 @@ if not config_file.is_file():
 else:
     with config_file.open(encoding="utf-8") as file:
         config = json.load(file)
-        config.update(keyring.get_secrets(config))
 
 """	
 Setup bot intents (events restrictions)
@@ -150,7 +149,7 @@ bot.logger = logger
 
 def init_openai():
     # Initialize OpenAI
-    openai.api_key = config["openai_api_key"]
+    openai.api_key = keyring.try_get_password(config["openai_api_key"])
     try:
         openai.Model.list()
     except openai.error.AuthenticationError as e:
@@ -336,7 +335,7 @@ def main():
     init_openai()
     asyncio.run(init_db())
     asyncio.run(load_cogs())
-    bot.run(config["token"])
+    bot.run(keyring.try_get_password(config["token"]))
 
 
 if __name__ == "__main__":
