@@ -16,27 +16,19 @@ from chatgpt_discord_bot.helpers import db_manager
 T = TypeVar("T")
 
 
-def is_owner() -> Callable[[T], T]:
+async def is_owner(context: commands.Context) -> bool:
     """
     This is a custom check to see if the user executing the command is an owner of the bot.
     """
-
-    async def predicate(context: commands.Context) -> bool:
-        if context.author.id not in context.bot.config["owners"]:
-            raise UserNotOwner
-        return True
-
-    return commands.check(predicate)
+    if context.author.id not in context.bot.config["owners"]:
+        raise UserNotOwner
+    return True
 
 
-def not_blacklisted() -> Callable[[T], T]:
+async def not_blacklisted(context: commands.Context) -> bool:
     """
     This is a custom check to see if the user executing the command is blacklisted.
     """
-
-    async def predicate(context: commands.Context) -> bool:
-        if await db_manager.is_blacklisted(context.author.id):
-            raise UserBlacklisted
-        return True
-
-    return commands.check(predicate)
+    if await db_manager.is_blacklisted(context.author.id):
+        raise UserBlacklisted
+    return True

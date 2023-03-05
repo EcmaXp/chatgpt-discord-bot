@@ -29,7 +29,7 @@ class General(commands.Cog, name="general"):
         name="help", description="List all commands the bot has loaded."
     )
     @app_commands.guilds(OWNER_GUILD_ID)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     async def help(self, context: Context) -> None:
         prefix = self.bot.config["prefix"]
         embed = discord.Embed(
@@ -53,7 +53,7 @@ class General(commands.Cog, name="general"):
         description="Get some useful (or not) information about the bot.",
     )
     @app_commands.guilds(OWNER_GUILD_ID)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     async def botinfo(self, context: Context) -> None:
         """
         Get some useful (or not) information about the bot.
@@ -81,7 +81,7 @@ class General(commands.Cog, name="general"):
         name="ping",
         description="Check if the bot is alive.",
     )
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     async def ping(self, context: Context) -> None:
         """
         Check if the bot is alive.
@@ -100,8 +100,8 @@ class General(commands.Cog, name="general"):
         description="Get the invite link of the bot to be able to invite it.",
     )
     @app_commands.guilds(OWNER_GUILD_ID)
-    @checks.not_blacklisted()
-    @checks.is_owner()
+    @commands.check(checks.not_blacklisted)
+    @commands.check(checks.is_owner)
     async def invite(self, context: Context) -> None:
         """
         Get the invite link of the bot to be able to invite it.

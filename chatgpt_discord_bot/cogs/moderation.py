@@ -28,7 +28,7 @@ class Moderation(commands.Cog, name="moderation"):
     @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(kick_members=True)
     @commands.bot_has_permissions(kick_members=True)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     @app_commands.describe(
         user="The user that should be kicked.",
         reason="The reason why the user should be kicked.",
@@ -81,7 +81,7 @@ class Moderation(commands.Cog, name="moderation"):
     @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(manage_nicknames=True)
     @commands.bot_has_permissions(manage_nicknames=True)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     @app_commands.describe(
         user="The user that should have a new nickname.",
         nickname="The new nickname that should be set.",
@@ -120,7 +120,7 @@ class Moderation(commands.Cog, name="moderation"):
     @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     @app_commands.describe(
         user="The user that should be banned.",
         reason="The reason why the user should be banned.",
@@ -173,7 +173,7 @@ class Moderation(commands.Cog, name="moderation"):
     )
     @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(manage_messages=True)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     async def warning(self, context: Context) -> None:
         """
         Manage warnings of a user on a server.
@@ -192,7 +192,7 @@ class Moderation(commands.Cog, name="moderation"):
         description="Adds a warning to a user in the server.",
     )
     @app_commands.guilds(OWNER_GUILD_ID)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
         user="The user that should be warned.",
@@ -235,7 +235,7 @@ class Moderation(commands.Cog, name="moderation"):
         description="Removes a warning from a user in the server.",
     )
     @app_commands.guilds(OWNER_GUILD_ID)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     @commands.has_permissions(manage_messages=True)
     @app_commands.describe(
         user="The user that should get their warning removed.",
@@ -267,7 +267,7 @@ class Moderation(commands.Cog, name="moderation"):
     )
     @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_guild_permissions(manage_messages=True)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     @app_commands.describe(user="The user you want to get the warnings of.")
     async def warning_list(self, context: Context, user: discord.User):
         """
@@ -294,7 +294,7 @@ class Moderation(commands.Cog, name="moderation"):
     @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_permissions(manage_messages=True)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     @app_commands.describe(amount="The amount of messages that should be deleted.")
     async def purge(self, context: Context, amount: int) -> None:
         """
@@ -320,7 +320,7 @@ class Moderation(commands.Cog, name="moderation"):
     @app_commands.guilds(OWNER_GUILD_ID)
     @commands.has_permissions(ban_members=True)
     @commands.bot_has_permissions(ban_members=True)
-    @checks.not_blacklisted()
+    @commands.check(checks.not_blacklisted)
     @app_commands.describe(
         user_id="The user ID that should be banned.",
         reason="The reason why the user should be banned.",
