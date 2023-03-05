@@ -9,8 +9,11 @@ Version: 5.5.0
 import os
 
 import aiosqlite
+from pathlib import Path
 
-DATABASE_PATH = f"{os.path.realpath(os.path.dirname(__file__))}/../../database/database.db"
+package_dir = Path(__file__).parents[1]
+
+DATABASE_PATH = package_dir / "database.db"
 
 
 async def get_blacklisted_users() -> list:

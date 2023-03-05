@@ -12,7 +12,9 @@ import logging
 import os
 import platform
 import random
+import shutil
 import sys
+from pathlib import Path
 
 import aiosqlite
 import discord
@@ -21,13 +23,22 @@ from discord.ext.commands import Bot, Context
 
 import chatgpt_discord_bot.exceptions
 
-config_file = (
-    f"{os.path.realpath(os.path.dirname(os.path.dirname(__file__)))}/config.json"
-)
-if not os.path.isfile(config_file):
-    sys.exit("'config.json' not found! Please add it and try again.")
+package_dir = Path(__file__).parent
+package_name = package_dir.name
+repo_dir = package_dir.parent
+
+config_file = repo_dir / "config.json"
+config_example_file = config_file.with_suffix(".example.json")
+if not config_file.is_file():
+    if config_example_file.is_file():
+        shutil.copyfile(config_example_file, config_file)
+        sys.exit(
+            f"{config_file.name!r} not found! A new one has been created, please edit it and try again."
+        )
+    else:
+        sys.exit(f"{config_file.name!r} not found! Please add it and try again.")
 else:
-    with open(config_file) as file:
+    with config_file.open(encoding="utf-8") as file:
         config = json.load(file)
 
 """	
@@ -114,7 +125,7 @@ class LoggingFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-logger = logging.getLogger("chatgpt_discord_bot")
+logger = logging.getLogger(package_name)
 logger.setLevel(logging.INFO)
 
 # Console handler
@@ -134,12 +145,8 @@ bot.logger = logger
 
 
 async def init_db():
-    async with aiosqlite.connect(
-        f"{os.path.realpath(os.path.dirname(__file__))}/database/database.db"
-    ) as db:
-        with open(
-            f"{os.path.realpath(os.path.dirname(__file__))}/database/schema.sql"
-        ) as file:
+    async with aiosqlite.connect(str(package_dir / "database/database.db")) as db:
+        with open(str(package_dir / "database/schema.sql")) as file:
             await db.executescript(file.read())
         await db.commit()
 
@@ -293,11 +300,11 @@ async def load_cogs() -> None:
     """
     The code in this function is executed whenever the bot will start.
     """
-    for file in os.listdir(f"{os.path.realpath(os.path.dirname(__file__))}/cogs"):
-        if file.endswith(".py"):
-            extension = file[:-3]
+    for file in (package_dir / "cogs").iterdir():
+        if file.suffix == ".py":
+            extension = file.stem
             try:
-                await bot.load_extension(f"chatgpt_discord_bot.cogs.{extension}")
+                await bot.load_extension(f"{package_name}.cogs.{extension}")
                 bot.logger.info(f"Loaded extension '{extension}'")
             except Exception as e:
                 exception = f"{type(e).__name__}: {e}"

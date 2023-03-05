@@ -11,6 +11,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context
 
+from chatgpt_discord_bot import package_name
 from chatgpt_discord_bot.helpers import checks, db_manager
 
 
@@ -107,7 +108,7 @@ class Owner(commands.Cog, name="owner"):
         :param cog: The name of the cog to load.
         """
         try:
-            await self.bot.load_extension(f"chatgpt_discord_bot.{cog}")
+            await self.bot.load_extension(f"{package_name}.cogs.{cog}")
         except Exception:
             embed = discord.Embed(
                 description=f"Could not load the `{cog}` cog.", color=0xE02B2B
@@ -133,7 +134,7 @@ class Owner(commands.Cog, name="owner"):
         :param cog: The name of the cog to unload.
         """
         try:
-            await self.bot.unload_extension(f"chatgpt_discord_bot.{cog}")
+            await self.bot.unload_extension(f"{package_name}.cogs.{cog}")
         except Exception:
             embed = discord.Embed(
                 description=f"Could not unload the `{cog}` cog.", color=0xE02B2B
@@ -159,7 +160,7 @@ class Owner(commands.Cog, name="owner"):
         :param cog: The name of the cog to reload.
         """
         try:
-            await self.bot.reload_extension(f"chatgpt_discord_bot.{cog}")
+            await self.bot.reload_extension(f"{package_name}.cogs.{cog}")
         except Exception:
             embed = discord.Embed(
                 description=f"Could not reload the `{cog}` cog.", color=0xE02B2B
