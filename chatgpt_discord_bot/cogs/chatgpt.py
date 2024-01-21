@@ -26,7 +26,7 @@ from chatgpt_discord_bot.helpers.openai import get_tokens
 from chatgpt_discord_bot.helpers.utils import removeprefix
 
 __author__ = "EcmaXp <ecmaxp@ecmaxp.kr>"
-__version__ = "0.1.1"
+__version__ = "0.2"
 
 COMPRESS_THRESHOLD_TOKEN = 1024
 MAX_TOTAL_TOKEN = 4096
