@@ -24,7 +24,7 @@ from discord.ext import commands, tasks
 from discord.ext.commands import Bot, Context
 
 import chatgpt_discord_bot.exceptions
-from chatgpt_discord_bot.helpers import keyring
+from chatgpt_discord_bot.helpers import secrets
 
 package_dir = Path(__file__).parent
 package_name = package_dir.name
@@ -149,7 +149,7 @@ bot.logger = logger
 
 def init_openai():
     # Initialize OpenAI
-    openai.api_key = keyring.try_get_password(config["openai_api_key"])
+    openai.api_key = secrets.try_get_password(config["openai_api_key"])
     try:
         client = openai.OpenAI(api_key=openai.api_key)
         client.models.list()
@@ -326,7 +326,7 @@ def main():
     init_openai()
     asyncio.run(init_db())
     asyncio.run(load_cogs())
-    bot.run(keyring.try_get_password(config["token"]))
+    bot.run(secrets.try_get_password(config["token"]))
 
 
 if __name__ == "__main__":
