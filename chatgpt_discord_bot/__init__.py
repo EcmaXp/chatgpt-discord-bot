@@ -44,7 +44,7 @@ else:
     with config_file.open(encoding="utf-8") as file:
         config = json.load(file)
 
-"""	
+"""
 Setup bot intents (events restrictions)
 For more information about intents, please go to the following websites:
 https://discordpy.readthedocs.io/en/latest/intents.html
@@ -151,8 +151,9 @@ def init_openai():
     # Initialize OpenAI
     openai.api_key = keyring.try_get_password(config["openai_api_key"])
     try:
-        openai.Model.list()
-    except openai.error.AuthenticationError as e:
+        client = openai.OpenAI(api_key=openai.api_key)
+        client.models.list()
+    except openai.AuthenticationError as e:
         bot.logger.error(
             f"OpenAI API key is invalid, please check your config file and try again.\n{e}"
         )

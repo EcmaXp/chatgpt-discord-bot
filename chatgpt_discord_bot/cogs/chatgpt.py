@@ -28,12 +28,16 @@ from chatgpt_discord_bot.helpers.utils import removeprefix
 __author__ = "EcmaXp <ecmaxp@ecmaxp.kr>"
 __version__ = "0.1.1"
 
+COMPRESS_THRESHOLD_TOKEN = 1024
+MAX_TOTAL_TOKEN = 4096
+MAX_PROMPT_TOKEN = 8192
 
 class Chat:
     def __init__(self, history: list[dict] = None, context: commands.Context = None):
         self.history = history or []
         self.context = context
         self.last_completion = None
+        self.openai = openai.AsyncOpenAI(api_key=openai.api_key)
         self.config = context.bot.config if context else config
         self.user = (
             sha256(str(context.author.id).encode()).hexdigest() if context else None
@@ -55,20 +59,20 @@ class Chat:
     def __iter__(self):
         return iter(self.history)
 
-    async def completion(self, *, max_tokens: int = 4096):
+    async def completion(self, *, max_tokens: int = MAX_TOTAL_TOKEN):
         max_tokens = min(max(self.get_max_tokens(), 0), max_tokens)
         if not max_tokens:
             raise ValueError("All tokens are used up, start a new chat please.")
 
-        completion = await openai.ChatCompletion.acreate(
-            model="gpt-3.5-turbo",
+        completion = await self.openai.chat.completions.create(
+            model=self.get_model(),
             messages=self.get_messages(),
             max_tokens=max_tokens,
             user=self.user or "",
         )
         return completion
 
-    async def ask(self, text: Optional[str] = None, *, max_tokens: int = 4096):
+    async def ask(self, text: Optional[str] = None, *, max_tokens: int = MAX_TOTAL_TOKEN):
         if text is not None:
             self.add_message("user", text)
         completion = await self.completion(max_tokens=max_tokens)
@@ -97,7 +101,7 @@ class Chat:
         ]
 
     def get_max_tokens(self) -> int:
-        return 4096 - self.get_tokens() - 1
+        return MAX_TOTAL_TOKEN - self.get_tokens() - 1
 
     def get_tokens(self) -> int:
         return 2 + sum(item["tokens"] + 5 for item in self.history)
@@ -114,13 +118,15 @@ class Chat:
             print(f"{item['role']}: {item['content']}")
 
         if self.last_completion is not None:
-            for key, value in self.last_completion.usage.items():
-                print(f"{key}: {value}")
+            usage = self.last_completion.usage
+            print(f"{usage.completion_tokens = }")
+            print(f"{usage.prompt_tokens = }")
+            print(f"{usage.total_tokens = }")
 
     async def compress_large_messages(
         self,
-        threshold_tokens: int = 100,
-        max_prompt_tokens: int = (4096 - 1024),
+        threshold_tokens: int = COMPRESS_THRESHOLD_TOKEN,
+        max_prompt_tokens: int = MAX_PROMPT_TOKEN,
     ):
         if self.get_tokens() < max_prompt_tokens:
             return
@@ -198,8 +204,8 @@ class ChatGPT(commands.Cog, name="chatgpt"):
         print(f"{title}: Requesting {before_tokens} tokens")
 
         await chat.compress_large_messages(
-            threshold_tokens=256,
-            max_prompt_tokens=4096 - 2048,
+            threshold_tokens=COMPRESS_THRESHOLD_TOKEN,
+            max_prompt_tokens=MAX_PROMPT_TOKEN,
         )
         after_tokens = chat.get_tokens()
         discarded_tokens = before_tokens - after_tokens
